@@ -239,8 +239,8 @@ static dd4hep::Ref_t create_DCH_o1_v03(dd4hep::Detector& desc, dd4hep::xml::Hand
     std::string triplet_name = detName + "_triplet" + std::to_string(ilayer);
     dd4hep::Volume triplet_volume(triplet_name, triplet_solid, gasvolMat);
     triplet_volume.setVisAttributes(desc.visAttributes(Form("dch_layer_vis%d", ilayer % 2)));
-    if (ilayer >= 56){
-      auto triplet_placed = gas_v.placeVolume(triplet_volume);
+    if (ilayer < 156){
+      auto triplet_placed = gas_v.placeVolume(triplet_volume, ilayer);
 
       int ilayerWithinSuperlayer = (ilayer - 1) % DCH_i->nlayersPerSuperlayer;
       int nsuperlayer_minus_1 = DCH_i->Get_nsuperlayer_minus_1(ilayer);
@@ -335,6 +335,19 @@ static dd4hep::Ref_t create_DCH_o1_v03(dd4hep::Detector& desc, dd4hep::xml::Hand
     DCH_length_t sense_wire_length = 0.5 * DCH_i->WireLength(ilayer, sense_wire_placement_radius) -
                               sense_wire_radius * cos(DCH_i->stereoangle_z0(sense_wire_placement_radius)) - safety_z_interspace;
 
+    if (sense_wire_placement_radius - l.radius_sw_z0 > 1e-6*dd4hep::mm) {
+      std::cout << "Warning: sense wire placement radius " << sense_wire_placement_radius/dd4hep::mm
+                << " mm is larger than database value " << l.radius_sw_z0/dd4hep::mm << " mm for layer " << ilayer << " \n by " << sense_wire_placement_radius - l.radius_sw_z0/dd4hep::mm << " mm"
+                << ". Check calculation." << std::endl;
+    }
+
+    if (sense_wire_placement_radius - (0.5 * (l.radius_fdw_z0 + l.radius_fuw_z0)) > 1e-6*dd4hep::mm) {
+      std::cout << "Warning: sense wire placement radius " << sense_wire_placement_radius/dd4hep::mm
+                << " mm is larger than average of field wire radii "
+                << 0.5 * (l.radius_fdw_z0 + l.radius_fuw_z0) / dd4hep::mm << " mm for layer " << ilayer << " \n by " << sense_wire_placement_radius - (0.5 * (l.radius_fdw_z0 + l.radius_fuw_z0))/dd4hep::mm << " mm"
+                << ". Check calculation." << std::endl;
+    }
+
 
     dd4hep::Tube    sense_wire_solid(0., sense_wire_radius, sense_wire_length);
     dd4hep::Volume  sense_wire_volume(triplet_name + "_sense_wire", sense_wire_solid, dch_SWire_material);
@@ -395,7 +408,7 @@ static dd4hep::Ref_t create_DCH_o1_v03(dd4hep::Detector& desc, dd4hep::xml::Hand
     std::cout << "Rotation Angle Inner Field: " << (-1.) * l.StereoSign() * DCH_i->stereoangle_z0(inner_field_wire_placement_radius)/dd4hep::deg << " deg" << std::endl;
     std::cout << "Rotation Angle Outer Field: " << (-1.) * l.StereoSign() * DCH_i->stereoangle_z0(outer_field_wire_placement_radius)/dd4hep::deg << " deg" << std::endl;
 
-    for (int nphi=0; nphi<l.nwires; ++nphi) 
+    for (int nphi=0; nphi<1; ++nphi) 
     {
       DCH_angle_t wire_phi_angle = phi_step * nphi + 0.25 * cell_phi_width * (ilayer % 2);
 
