@@ -19,6 +19,8 @@
 
 #include "DDRec/DCH_info.h"
 
+#include "detectorSegmentations/WireTracker_k4geo.h"
+
 namespace DCH_v3 {
 
 using DCH_length_t = dd4hep::rec::DCH_info_struct::DCH_length_t;
@@ -108,6 +110,11 @@ static dd4hep::Ref_t create_DCH_o1_v03(dd4hep::Detector& desc, dd4hep::xml::Hand
   auto dch_SWire_material = desc.material(wiresElem.attr<std::string>(_Unicode(SWire_material)));
   auto dch_FSideWire_material = desc.material(wiresElem.attr<std::string>(_Unicode(FSideWire_material)));
   auto dch_FCentralWire_material = desc.material(wiresElem.attr<std::string>(_Unicode(FCentralWire_material)));
+
+  auto segmentation =
+      dynamic_cast<dd4hep::DDSegmentation::WireTracker_k4geo*>(sens.readout().segmentation().segmentation());
+  segmentation->setDCHinfo(DCH_i);
+
 
   /* Geometry tree:
    * Gas (tube) -> Layer_1 (hyp) -> cell_1 (twisted tube)
@@ -244,7 +251,9 @@ static dd4hep::Ref_t create_DCH_o1_v03(dd4hep::Detector& desc, dd4hep::xml::Hand
 
       int ilayerWithinSuperlayer = (ilayer - 1) % DCH_i->nlayersPerSuperlayer;
       int nsuperlayer_minus_1 = DCH_i->Get_nsuperlayer_minus_1(ilayer);
+      triplet_placed.addPhysVolID("layer", ilayerWithinSuperlayer);
       triplet_placed.addPhysVolID("superlayer", nsuperlayer_minus_1);
+
     }
 
     // ilayer is a counter that runs from 1 to 112 (nsuperlayers * nlayersPerSuperlayer)
@@ -319,6 +328,8 @@ static dd4hep::Ref_t create_DCH_o1_v03(dd4hep::Detector& desc, dd4hep::xml::Hand
         sense_layer_solid,
         gasvolMat);
 
+    
+    sense_layer_volume.setSensitiveDetector(sens);
     sense_layer_volume.setVisAttributes(desc.visAttributes(Form("dch_sense_vis%d", ilayer % 2)));
     
 
@@ -334,19 +345,6 @@ static dd4hep::Ref_t create_DCH_o1_v03(dd4hep::Detector& desc, dd4hep::xml::Hand
     // DCH_length_t sense_wire_length = DCH_i->Lhalf ;// / cos(DCH_i->stereoangle_z0(sense_wire_placement_radius)) - tan(DCH_i->stereoangle_z0(sense_wire_placement_radius)) * sense_wire_radius - safety_z_interspace;
     DCH_length_t sense_wire_length = 0.5 * DCH_i->WireLength(ilayer, sense_wire_placement_radius) -
                               sense_wire_radius * cos(DCH_i->stereoangle_z0(sense_wire_placement_radius)) - safety_z_interspace;
-
-    if (sense_wire_placement_radius - l.radius_sw_z0 > 1e-6*dd4hep::mm) {
-      std::cout << "Warning: sense wire placement radius " << sense_wire_placement_radius/dd4hep::mm
-                << " mm is larger than database value " << l.radius_sw_z0/dd4hep::mm << " mm for layer " << ilayer << " \n by " << sense_wire_placement_radius - l.radius_sw_z0/dd4hep::mm << " mm"
-                << ". Check calculation." << std::endl;
-    }
-
-    if (sense_wire_placement_radius - (0.5 * (l.radius_fdw_z0 + l.radius_fuw_z0)) > 1e-6*dd4hep::mm) {
-      std::cout << "Warning: sense wire placement radius " << sense_wire_placement_radius/dd4hep::mm
-                << " mm is larger than average of field wire radii "
-                << 0.5 * (l.radius_fdw_z0 + l.radius_fuw_z0) / dd4hep::mm << " mm for layer " << ilayer << " \n by " << sense_wire_placement_radius - (0.5 * (l.radius_fdw_z0 + l.radius_fuw_z0))/dd4hep::mm << " mm"
-                << ". Check calculation." << std::endl;
-    }
 
 
     dd4hep::Tube    sense_wire_solid(0., sense_wire_radius, sense_wire_length);
@@ -403,10 +401,6 @@ static dd4hep::Ref_t create_DCH_o1_v03(dd4hep::Detector& desc, dd4hep::xml::Hand
 
     dd4hep::RotationX outer_field_stereo_rot((-1.) * l.StereoSign() * DCH_i->stereoangle_z0(outer_field_wire_placement_radius));
     dd4hep::Transform3D outer_field_transform(outer_field_stereo_rot * dd4hep::Translation3D(outer_field_wire_placement_radius, 0., 0.));
-
-    std::cout << "Rotation Angle Sense: " << (-1.) * l.StereoSign() * DCH_i->stereoangle_z0(sense_wire_placement_radius)/dd4hep::deg << " deg" << std::endl;
-    std::cout << "Rotation Angle Inner Field: " << (-1.) * l.StereoSign() * DCH_i->stereoangle_z0(inner_field_wire_placement_radius)/dd4hep::deg << " deg" << std::endl;
-    std::cout << "Rotation Angle Outer Field: " << (-1.) * l.StereoSign() * DCH_i->stereoangle_z0(outer_field_wire_placement_radius)/dd4hep::deg << " deg" << std::endl;
 
     for (int nphi=0; nphi<1; ++nphi) 
     {

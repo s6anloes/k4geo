@@ -50,3 +50,6 @@ DECLARE_SEGMENTATION(SCEPCal_MainSegmentation_k4geo,
 #include "detectorSegmentations/SCEPCal_TimingSegmentation_k4geo.h"
 DECLARE_SEGMENTATION(SCEPCal_TimingSegmentation_k4geo,
                      create_segmentation<dd4hep::DDSegmentation::SCEPCal_TimingSegmentation_k4geo>)
+
+#include "detectorSegmentations/WireTracker_k4geo.h"
+DECLARE_SEGMENTATION(WireTracker_k4geo, create_segmentation<dd4hep::DDSegmentation::WireTracker_k4geo>) 

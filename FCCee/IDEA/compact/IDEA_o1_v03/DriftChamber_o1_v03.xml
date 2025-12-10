@@ -1,5 +1,6 @@
 <lccdd>
 
+  <include ref="${DD4hepINSTALL}/DDDetectors/compact/detector_types.xml" />
   <includes>
     <gdmlFile  ref="elements_o1_v01.xml"/>
     <gdmlFile  ref="materials_o1_v03.xml"/>
@@ -8,18 +9,18 @@
   <!-- %%%%%%           based on the geometry version "IDEA231026"               %%%%%% -->
   <define>
 
-  <constant name="world_size" value="25*m"/>
+  <!-- <constant name="world_size" value="25*m"/>
   <constant name="world_x" value="world_size"/>
   <constant name="world_y" value="world_size"/>
-  <constant name="world_z" value="world_size"/>
+  <constant name="world_z" value="world_size"/> -->
 
 
-  <constant name="DetID_DCH"                    value=" 3"/>
+  <!-- <constant name="DetID_DCH"                    value=" 3"/> -->
   <!--  Drift Chamber parameters    -->
   <!--      Gas and vesssel geometry parameters moved to DetDimensions file   -->
-  <constant name="DCH_inner_cyl_R_total"          value=" 349  * mm "  />
+  <!-- <constant name="DCH_inner_cyl_R_total"          value=" 349  * mm "  />
   <constant name="DCH_outer_cyl_R_total"          value=" 2001 * mm "  />
-  <constant name="DCH_half_length_total"          value=" 2250 * mm "  />
+  <constant name="DCH_half_length_total"          value=" 2250 * mm "  /> -->
 
   <!-- Gas (active volume) geometry     -->
   <constant name="DCH_gas_inner_cyl_R"          value=" 350 * mm "   />
@@ -138,6 +139,7 @@
 
   <readouts>
     <readout name="DCHCollection">
+      <segmentation type="WireTracker_k4geo"/>
       <!--  superlayer: from 0 to 13                  -->
       <!--  layer: from 0 to 7 (within a superlayer)  -->
       <!--  nphi: max of nphi will be 816 (192+13*48) -->
