@@ -27,35 +27,34 @@ namespace DDSegmentation {
         auto wire0_dir = m_dch_info->Calculate_wire_vector_ez(ilayer, 0);
 
         // get the coordinates of wire 0 at the z position of the hit
-        double dz = globalPosition.Z;
+        double dz = globalPosition.Z / wire0_dir.Z();
         auto wire0_at_zhit = wire0_pos + dz * wire0_dir;
 
         // get the phi of the hit and of the wire 0 at the hit z position
         double phi_hit = phiFromXY(globalPosition);
         double phi_wire0 = phiFromXY(wire0_at_zhit);
 
-        double dphi = phi_hit - phi_wire0;
-        if (dphi < 0) {
-            dphi += 2 * M_PI;
-        }
-
         double cell_phi_width = m_dch_info->Get_phi_width(ilayer);
 
-        double offset = cell_phi_width * 0.25 * (ilayer % 2); // staggering of layers in phi
+        double dphi = phi_hit - phi_wire0;
 
-        unsigned int nphi = positionToBin(dphi, cell_phi_width, offset);
+        // Account for first cell going from -cell_phi_width/2 to +cell_phi_width/2 
+        dphi += cell_phi_width/2;
+
+        // Make sure dphi is in [0, 2pi)
+        while (dphi < 0) {
+            dphi += 2 * M_PI;
+        }
+        while (dphi >= 2 * M_PI) {
+            dphi -= 2 * M_PI;
+        }
+
+        unsigned int nphi = int(floor(dphi / cell_phi_width));
 
         decoder()->set(cID, m_nphiIndex, static_cast<VolumeID>(nphi));
 
         int stereosign = m_dch_info->database.at(ilayer).StereoSign();
         decoder()->set(cID, m_stereosignIndex, static_cast<VolumeID>(stereosign));
-
-        if (ilayer%2 != 0) {
-            std::cout << "phi_hit: " << phi_hit << "\n"
-                      << "phi_wire0: " << phi_wire0 << "\n"
-                      << "dphi: " << dphi << "\n"
-                      << "nphi: " << nphi << "\n";
-        }
 
         return cID;
     }
