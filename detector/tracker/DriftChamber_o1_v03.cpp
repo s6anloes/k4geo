@@ -402,24 +402,29 @@ static dd4hep::Ref_t create_DCH_o1_v03(dd4hep::Detector& desc, dd4hep::xml::Hand
     dd4hep::RotationX outer_field_stereo_rot((-1.) * l.StereoSign() * DCH_i->stereoangle_z0(outer_field_wire_placement_radius));
     dd4hep::Transform3D outer_field_transform(outer_field_stereo_rot * dd4hep::Translation3D(outer_field_wire_placement_radius, 0., 0.));
 
-    for (int nphi=0; nphi<1; ++nphi) 
+    for (int nphi=0; nphi<l.nwires; ++nphi) 
     {
       DCH_angle_t wire_phi_angle = phi_step * nphi + 0.25 * cell_phi_width * (ilayer % 2);
 
       dd4hep::RotationZ wire_phi_rot(wire_phi_angle);
 
-      // Inner field wire
-      dd4hep::Transform3D inner_field_wire_final_transform(wire_phi_rot * inner_field_transform);
-      auto inner_field_placed = inner_field_layer_volume.placeVolume(inner_field_wire_volume, inner_field_wire_final_transform);
+      if (buildFieldWires) {
+        // Inner field wire
+        dd4hep::Transform3D inner_field_wire_final_transform(wire_phi_rot * inner_field_transform);
+        auto inner_field_placed = inner_field_layer_volume.placeVolume(inner_field_wire_volume, inner_field_wire_final_transform);
 
-      // Outer field wire
-      dd4hep::Transform3D outer_field_wire_final_transform(wire_phi_rot * outer_field_transform);
-      auto outer_field_placed = outer_field_layer_volume.placeVolume(outer_field_wire_volume, outer_field_wire_final_transform);
+        // Outer field wire
+        dd4hep::Transform3D outer_field_wire_final_transform(wire_phi_rot * outer_field_transform);
+        auto outer_field_placed = outer_field_layer_volume.placeVolume(outer_field_wire_volume, outer_field_wire_final_transform);
+      }
 
       // Alternating sense wire and central field wire
-      dd4hep::Transform3D sense_or_central_final_transform(wire_phi_rot * sense_transform);
-      dd4hep::Volume* wire_to_be_placed = (nphi % 2 == 0) ? &sense_wire_volume : &field_central_wire_volume;
-      auto sense_or_central_placed = sense_layer_volume.placeVolume(*wire_to_be_placed, sense_or_central_final_transform);
+      const bool isSenseWire = (nphi % 2 == 0);
+      if ((isSenseWire && buildSenseWires) || (!isSenseWire && buildFieldWires)) {
+        dd4hep::Transform3D sense_or_central_final_transform(wire_phi_rot * sense_transform);
+        dd4hep::Volume* wire_to_be_placed = isSenseWire ? &sense_wire_volume : &field_central_wire_volume;
+        auto sense_or_central_placed = sense_layer_volume.placeVolume(*wire_to_be_placed, sense_or_central_final_transform);
+      }
     }
 
     
