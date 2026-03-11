@@ -40,7 +40,7 @@ namespace DDSegmentation {
         void setDCHinfo(dd4hep::rec::DCH_info* dch_info) { m_dch_info = dch_info; }
 
 
-        CellID setCellID(int System, int Superlayer, int Layer, int Nphi, int StereoSign) const;
+        CellID setCellID(int System, int Superlayer, int Layer, int Nphi, int StereoSign, int Wire) const;
 
         inline double phiFromXY(const Vector3D& aposition) const { return std::atan2(aposition.Y, aposition.X) + M_PI; }
 
@@ -49,12 +49,14 @@ namespace DDSegmentation {
         inline const std::string& fieldNameLayer() const { return m_layerId; }
         inline const std::string& fieldNameNphi() const { return m_nphiId; }
         inline const std::string& fieldNameStereosign() const { return m_stereosignId; }
+        inline const std::string& fieldNameWire() const { return m_wireId; }
 
         inline void setFieldNameSystem(const std::string& fieldName) { m_systemId = fieldName; }
         inline void setFieldNameSuperlayer(const std::string& fieldName) { m_superlayerId = fieldName; }
         inline void setFieldNameLayer(const std::string& fieldName) { m_layerId = fieldName; }
         inline void setFieldNameNphi(const std::string& fieldName) { m_nphiId = fieldName; }
         inline void setFieldNameStereosign(const std::string& fieldName) { m_stereosignId = fieldName; }
+        inline void setFieldNameWire(const std::string& fieldName) { m_wireId = fieldName; }
 
     private:
         /// Initialization common to all ctors.
@@ -65,12 +67,14 @@ namespace DDSegmentation {
         std::string m_layerId;
         std::string m_nphiId;
         std::string m_stereosignId;
+        std::string m_wireId;
 
         int m_systemIndex = -1;
         int m_superlayerIndex = -1;
         int m_layerIndex = -1;
         int m_nphiIndex = -1;
         int m_stereosignIndex = -1;
+        int m_wireIndex = -1;
 
         /// Drift chamber info extension for geometry calculations
         dd4hep::rec::DCH_info* m_dch_info{nullptr};

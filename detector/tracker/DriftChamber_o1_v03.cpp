@@ -245,19 +245,20 @@ static dd4hep::Ref_t create_DCH_o1_v03(dd4hep::Detector& desc, dd4hep::xml::Hand
 
     std::string triplet_name = detName + "_triplet" + std::to_string(ilayer);
     dd4hep::Volume triplet_volume(triplet_name, triplet_solid, gasvolMat);
+    
     triplet_volume.setVisAttributes(desc.visAttributes(Form("dch_layer_vis%d", ilayer % 2)));
-    if (ilayer < 156){
-      auto triplet_placed = gas_v.placeVolume(triplet_volume, ilayer);
+    // if (ilayer==1 || ilayer==112) {
+    auto triplet_placed = gas_v.placeVolume(triplet_volume, ilayer);
 
-      int ilayerWithinSuperlayer = (ilayer - 1) % DCH_i->nlayersPerSuperlayer;
-      int nsuperlayer_minus_1 = DCH_i->Get_nsuperlayer_minus_1(ilayer);
-      triplet_placed.addPhysVolID("layer", ilayerWithinSuperlayer);
-      triplet_placed.addPhysVolID("superlayer", nsuperlayer_minus_1);
+    int ilayerWithinSuperlayer = (ilayer - 1) % DCH_i->nlayersPerSuperlayer;
+    int nsuperlayer_minus_1 = DCH_i->Get_nsuperlayer_minus_1(ilayer);
+    triplet_placed.addPhysVolID("layer", ilayerWithinSuperlayer);
+    triplet_placed.addPhysVolID("superlayer", nsuperlayer_minus_1);
+    // }
 
-    }
+    
 
     // ilayer is a counter that runs from 1 to 112 (nsuperlayers * nlayersPerSuperlayer)
-    // it seems more convenient to store the layer number within the superlayer
     // ilayerWithinSuperlayer runs from 0 to 7 (nlayersPerSuperlayer-1)
 
     // dd4hep::DetElement layer_DE(det, layer_name + "DE", ilayer);
@@ -381,9 +382,9 @@ static dd4hep::Ref_t create_DCH_o1_v03(dd4hep::Detector& desc, dd4hep::xml::Hand
     DCH_length_t central_field_wire_length = 0.5 * DCH_i->WireLength(ilayer, sense_wire_placement_radius) - central_field_wire_radius * cos(DCH_i->stereoangle_z0(sense_wire_placement_radius)) - safety_z_interspace;
     // DCH_length_t central_field_wire_length = 0.5 * DCH_i->WireLength(ilayer, sense_wire_placement_radius) -
     //                                   central_field_wire_radius * cos(DCH_i->stereoangle_z0(sense_wire_placement_radius)) - safety_z_interspace;
-    dd4hep::Tube    field_central_wire_solid(0., central_field_wire_radius, central_field_wire_length);
-    dd4hep::Volume  field_central_wire_volume(triplet_name + "_central_field_wire", field_central_wire_solid, dch_FCentralWire_material);
-    field_central_wire_volume.setVisAttributes(wiresVis);
+    dd4hep::Tube    central_field_wire_solid(0., central_field_wire_radius, central_field_wire_length);
+    dd4hep::Volume  central_field_wire_volume(triplet_name + "_central_field_wire", central_field_wire_solid, dch_FCentralWire_material);
+    central_field_wire_volume.setVisAttributes(wiresVis);
 
 
 
@@ -402,22 +403,28 @@ static dd4hep::Ref_t create_DCH_o1_v03(dd4hep::Detector& desc, dd4hep::xml::Hand
     dd4hep::RotationX outer_field_stereo_rot((-1.) * l.StereoSign() * DCH_i->stereoangle_z0(outer_field_wire_placement_radius));
     dd4hep::Transform3D outer_field_transform(outer_field_stereo_rot * dd4hep::Translation3D(outer_field_wire_placement_radius, 0., 0.));
 
-
-    // inner_field_layer_volume.replicate(inner_field_wire_volume, dd4hep::Volume::ReplicationAxis::Phi_axis, l.nwires, phi_step);
-    // outer_field_layer_volume.replicate(outer_field_wire_volume, dd4hep::Volume::ReplicationAxis::Phi_axis, l.nwires, phi_step);
-    // sense_layer_volume.replicate(sense_wire_volume, dd4hep::Volume::ReplicationAxis::Phi_axis, l.nwires, phi_step);
-
     DCH_angle_t phi0 = 0.25 * cell_phi_width * (ilayer % 2); // staggering of the layers in phi, starting angle for the first wire
 
     dd4hep::Transform3D inner_field_start = dd4hep::Transform3D(dd4hep::RotationZ(phi0)*inner_field_transform);
     dd4hep::Transform3D outer_field_start = dd4hep::Transform3D(dd4hep::RotationZ(phi0)*outer_field_transform);
     dd4hep::Transform3D sense_start = dd4hep::Transform3D(dd4hep::RotationZ(phi0)*sense_transform);
-    dd4hep::Transform3D inc = dd4hep::Transform3D(dd4hep::RotationZ(phi_step));
+    dd4hep::Transform3D central_field_start = dd4hep::Transform3D(dd4hep::RotationZ(phi0+phi_step)*sense_transform);
+    // dd4hep::Transform3D inc = dd4hep::Transform3D(dd4hep::RotationZ(phi_step));
+    // dd4hep::Transform3D inc_sense = dd4hep::Transform3D(dd4hep::RotationZ(2*phi_step));
 
+    // incremental transformation in the local coordinate system of the wire
+    // consists of translation vector from one wire to the next and a rotation to make sure the next translation points in the right direction (rotating the local cooridinate system of the wire by phi_step)
+    dd4hep::Direction inc_sense_translation = dd4hep::RotationZ(phi_step) * dd4hep::Direction(sense_wire_placement_radius, 0., 0.) - dd4hep::Direction(sense_wire_placement_radius, 0., 0.);
+    // dd4hep::Transform3D inc_sense_wire = dd4hep::Transform3D(sense_start.Inverse()*dd4hep::Transform3D(dd4hep::RotationZ(phi_step))*sense_start) + dd4hep::Transform3D(inc_sense_translation);
+    dd4hep::Transform3D inc_sense_wire = sense_transform.Inverse() 
+                                   * dd4hep::RotationZ(phi_step)
+                                   * sense_transform;
 
-    inner_field_layer_volume.paramVolume1D(inner_field_start, inner_field_wire_volume, l.nwires, inc);
-    outer_field_layer_volume.paramVolume1D(outer_field_start, outer_field_wire_volume, l.nwires, inc);
-    sense_layer_volume.paramVolume1D(sense_start, sense_wire_volume, l.nwires, inc);
+    // inner_field_layer_volume.paramVolume1D(inner_field_start, inner_field_wire_volume, l.nwires, inc_wire);
+    // outer_field_layer_volume.paramVolume1D(outer_field_start, outer_field_wire_volume, l.nwires, inc_wire);
+    auto pv_wire = sense_layer_volume.paramVolume1D(sense_start, sense_wire_volume, l.nwires, inc_sense_wire);
+    // pv_wire.addPhysVolID("wire", 1);
+    // sense_layer_volume.paramVolume1D(central_field_start, central_field_wire_volume, l.nwires, inc_sense);
 
     // for (int nphi=0; nphi<l.nwires; ++nphi) 
     // {
@@ -439,7 +446,7 @@ static dd4hep::Ref_t create_DCH_o1_v03(dd4hep::Detector& desc, dd4hep::xml::Hand
     //   const bool isSenseWire = (nphi % 2 == 0);
     //   if ((isSenseWire && buildSenseWires) || (!isSenseWire && buildFieldWires)) {
     //     dd4hep::Transform3D sense_or_central_final_transform(wire_phi_rot * sense_transform);
-    //     dd4hep::Volume* wire_to_be_placed = isSenseWire ? &sense_wire_volume : &field_central_wire_volume;
+    //     dd4hep::Volume* wire_to_be_placed = isSenseWire ? &sense_wire_volume : &central_field_wire_volume;
     //     auto sense_or_central_placed = sense_layer_volume.placeVolume(*wire_to_be_placed, sense_or_central_final_transform);
     //   }
     // }
