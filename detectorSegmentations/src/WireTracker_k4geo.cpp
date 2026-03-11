@@ -75,25 +75,22 @@ namespace DDSegmentation {
         registerIdentifier("identifier_layer", "Cell ID identifier for Layer", m_layerId, "layer");
         registerIdentifier("identifier_nphi", "Cell ID identifier for Nphi", m_nphiId, "nphi");
         registerIdentifier("identifier_stereosign", "Cell ID identifier for StereoSign", m_stereosignId, "stereosign");
-        registerIdentifier("identifier_wire", "Cell ID identifier for Wire", m_wireId, "wire");
 
         m_systemIndex = decoder()->index(m_systemId);
         m_superlayerIndex = decoder()->index(m_superlayerId);
         m_layerIndex = decoder()->index(m_layerId);
         m_nphiIndex = decoder()->index(m_nphiId);
         m_stereosignIndex = decoder()->index(m_stereosignId);
-        m_wireIndex = decoder()->index(m_wireId);
     }
 
 
-    CellID WireTracker_k4geo::setCellID(int System, int Superlayer, int Layer, int Nphi, int StereoSign, int Wire) const {
+    CellID WireTracker_k4geo::setCellID(int System, int Superlayer, int Layer, int Nphi, int StereoSign) const {
         
         VolumeID systemId = static_cast<VolumeID>(System);
         VolumeID superlayerId = static_cast<VolumeID>(Superlayer);
         VolumeID layerId = static_cast<VolumeID>(Layer);
         VolumeID nphiId = static_cast<VolumeID>(Nphi);
         VolumeID stereosignId = static_cast<VolumeID>(StereoSign);
-        VolumeID wireId = static_cast<VolumeID>(Wire);
         
         VolumeID vID = 0;
         decoder()->set(vID, m_systemIndex, systemId);
@@ -101,7 +98,6 @@ namespace DDSegmentation {
         decoder()->set(vID, m_layerIndex, layerId);
         decoder()->set(vID, m_nphiIndex, nphiId);
         decoder()->set(vID, m_stereosignIndex, stereosignId);
-        decoder()->set(vID, m_wireIndex, wireId);
 
         return vID;
   }

@@ -47,8 +47,8 @@ public:
         return access()->implementation->cellID(local, global, volID);
     }
 
-    inline CellID setCellID(int System, int Superlayer, int Layer, int Nphi, int StereoSign, int Wire) const {
-        return access()->implementation->setCellID(System, Superlayer, Layer, Nphi, StereoSign, Wire);
+    inline CellID setCellID(int System, int Superlayer, int Layer, int Nphi, int StereoSign) const {
+        return access()->implementation->setCellID(System, Superlayer, Layer, Nphi, StereoSign);
     }
 
     inline double phiFromXY(const Position& aposition) const {
@@ -74,9 +74,6 @@ public:
     inline const std::string& fieldNameStereosign() const {
         return access()->implementation->fieldNameStereosign();
     }
-    inline const std::string& fieldNameWire() const {
-        return access()->implementation->fieldNameWire();
-    }
 
     inline void setFieldNameSystem(const std::string& fieldName) {
         access()->implementation->setFieldNameSystem(fieldName);
@@ -92,9 +89,6 @@ public:
     }
     inline void setFieldNameStereosign(const std::string& fieldName) {
         access()->implementation->setFieldNameStereosign(fieldName);
-    }
-    inline void setFieldNameWire(const std::string& fieldName) {
-        access()->implementation->setFieldNameWire(fieldName);
     }
 
 };
