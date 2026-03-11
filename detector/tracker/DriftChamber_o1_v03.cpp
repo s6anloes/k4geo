@@ -359,18 +359,14 @@ static dd4hep::Ref_t create_DCH_o1_v03(dd4hep::Detector& desc, dd4hep::xml::Hand
     // DCH_length_t inner_field_wire_length = DCH_i->Lhalf/cos(DCH_i->stereoangle_z0(l.radius_fdw_z0)) - tan(DCH_i->stereoangle_z0(l.radius_fdw_z0))*side_field_wire_radius - safety_z_interspace;
     DCH_length_t inner_field_wire_placement_radius = (inner_field_layer_inner_r + inner_field_layer_outer_r) / 2.0;
     DCH_length_t inner_field_wire_length = 0.5 * DCH_i->WireLength(ilayer, inner_field_wire_placement_radius) - side_field_wire_radius * cos(DCH_i->stereoangle_z0(inner_field_wire_placement_radius)) - safety_z_interspace;
-    // DCH_length_t inner_field_wire_length = 0.5 * DCH_i->WireLength(ilayer, inner_field_wire_placement_radius) -
-    //                                   side_field_wire_radius * cos(DCH_i->stereoangle_z0(inner_field_wire_placement_radius)) - safety_z_interspace;
     dd4hep::Tube    inner_field_wire_solid(0., side_field_wire_radius, inner_field_wire_length);
     dd4hep::Volume  inner_field_wire_volume(triplet_name + "_inner_field_wire", inner_field_wire_solid, dch_FSideWire_material);
     inner_field_wire_volume.setVisAttributes(wiresVis);
 
     
     DCH_length_t outer_field_wire_placement_radius = (outer_field_layer_inner_r + outer_field_layer_outer_r) / 2.0; 
-    DCH_length_t outer_field_wire_length = DCH_i->Lhalf/cos(DCH_i->stereoangle_z0(outer_field_wire_placement_radius)) - tan(DCH_i->stereoangle_z0(outer_field_wire_placement_radius))*side_field_wire_radius - safety_z_interspace;
-    // DCH_length_t outer_field_wire_length = 0.5 * DCH_i->WireLength(ilayer, outer_field_wire_placement_radius) - side_field_wire_radius * cos(DCH_i->stereoangle_z0(outer_field_wire_placement_radius)) - safety_z_interspace;
-    // DCH_length_t outer_field_wire_length = 0.5 * DCH_i->WireLength(ilayer, outer_field_wire_placement_radius) -
-    //                                   side_field_wire_radius * cos(DCH_i->stereoangle_z0(outer_field_wire_placement_radius)) - safety_z_interspace;
+    // DCH_length_t outer_field_wire_length = DCH_i->Lhalf/cos(DCH_i->stereoangle_z0(outer_field_wire_placement_radius)) - tan(DCH_i->stereoangle_z0(outer_field_wire_placement_radius))*side_field_wire_radius - safety_z_interspace;
+    DCH_length_t outer_field_wire_length = 0.5 * DCH_i->WireLength(ilayer, outer_field_wire_placement_radius) - side_field_wire_radius * cos(DCH_i->stereoangle_z0(outer_field_wire_placement_radius)) - safety_z_interspace;
     dd4hep::Tube    outer_field_wire_solid(0., side_field_wire_radius, outer_field_wire_length);
     dd4hep::Volume  outer_field_wire_volume(triplet_name + "_outer_field_wire", outer_field_wire_solid, dch_FSideWire_material);
     outer_field_wire_volume.setVisAttributes(wiresVis);
