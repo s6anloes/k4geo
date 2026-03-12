@@ -405,48 +405,32 @@ static dd4hep::Ref_t create_DCH_o1_v03(dd4hep::Detector& desc, dd4hep::xml::Hand
     dd4hep::Transform3D outer_field_start = dd4hep::Transform3D(dd4hep::RotationZ(phi0)*outer_field_transform);
     dd4hep::Transform3D sense_start = dd4hep::Transform3D(dd4hep::RotationZ(phi0)*sense_transform);
     dd4hep::Transform3D central_field_start = dd4hep::Transform3D(dd4hep::RotationZ(phi0+phi_step)*sense_transform);
-    // dd4hep::Transform3D inc = dd4hep::Transform3D(dd4hep::RotationZ(phi_step));
-    // dd4hep::Transform3D inc_sense = dd4hep::Transform3D(dd4hep::RotationZ(2*phi_step));
 
-    // incremental transformation in the local coordinate system of the wire
-    // consists of translation vector from one wire to the next and a rotation to make sure the next translation points in the right direction (rotating the local cooridinate system of the wire by phi_step)
-    dd4hep::Direction inc_sense_translation = dd4hep::RotationZ(phi_step) * dd4hep::Direction(sense_wire_placement_radius, 0., 0.) - dd4hep::Direction(sense_wire_placement_radius, 0., 0.);
-    // dd4hep::Transform3D inc_sense_wire = dd4hep::Transform3D(sense_start.Inverse()*dd4hep::Transform3D(dd4hep::RotationZ(phi_step))*sense_start) + dd4hep::Transform3D(inc_sense_translation);
+    // incremental transformation (should be in the local coordinate system of the wire)
+    // but the stereo angle for the wires makes things complicated here
+    // So here we apply the phi rotation in the global coordinate system and then we transform back to the local coordinate system of the wire
+    dd4hep::Transform3D inc_inner_field_wire = inner_field_transform.Inverse() 
+                                         * dd4hep::RotationZ(phi_step)
+                                         * inner_field_transform;
+    dd4hep::Transform3D inc_outer_field_wire = outer_field_transform.Inverse()
+                                         * dd4hep::RotationZ(phi_step)
+                                         * outer_field_transform;
     dd4hep::Transform3D inc_sense_wire = sense_transform.Inverse() 
-                                   * dd4hep::RotationZ(phi_step)
-                                   * sense_transform;
+                                         * dd4hep::RotationZ(2*phi_step)
+                                         * sense_transform;
 
-    // inner_field_layer_volume.paramVolume1D(inner_field_start, inner_field_wire_volume, l.nwires, inc_wire);
-    // outer_field_layer_volume.paramVolume1D(outer_field_start, outer_field_wire_volume, l.nwires, inc_wire);
-    auto pv_wire = sense_layer_volume.paramVolume1D(sense_start, sense_wire_volume, l.nwires, inc_sense_wire);
-    // pv_wire.addPhysVolID("wire", 1);
-    // sense_layer_volume.paramVolume1D(central_field_start, central_field_wire_volume, l.nwires, inc_sense);
+    inner_field_layer_volume.paramVolume1D(inner_field_start, inner_field_wire_volume, l.nwires, inc_inner_field_wire);
+    outer_field_layer_volume.paramVolume1D(outer_field_start, outer_field_wire_volume, l.nwires, inc_outer_field_wire);
+    sense_layer_volume.paramVolume1D(sense_start, sense_wire_volume, l.nwires/2, inc_sense_wire);
+    // sense_layer_volume.paramVolume1D(central_field_start, central_field_wire_volume, l.nwires/2, inc_sense_wire);
 
-    // for (int nphi=0; nphi<l.nwires; ++nphi) 
-    // {
-    //   DCH_angle_t wire_phi_angle = phi_step * nphi + 0.25 * cell_phi_width * (ilayer % 2);
-
-    //   dd4hep::RotationZ wire_phi_rot(wire_phi_angle);
-
-    //   if (buildFieldWires) {
-    //     // Inner field wire
-    //     dd4hep::Transform3D inner_field_wire_final_transform(wire_phi_rot * inner_field_transform);
-    //     auto inner_field_placed = inner_field_layer_volume.placeVolume(inner_field_wire_volume, inner_field_wire_final_transform);
-
-    //     // Outer field wire
-    //     dd4hep::Transform3D outer_field_wire_final_transform(wire_phi_rot * outer_field_transform);
-    //     auto outer_field_placed = outer_field_layer_volume.placeVolume(outer_field_wire_volume, outer_field_wire_final_transform);
-    //   }
-
-    //   // Alternating sense wire and central field wire
-    //   const bool isSenseWire = (nphi % 2 == 0);
-    //   if ((isSenseWire && buildSenseWires) || (!isSenseWire && buildFieldWires)) {
-    //     dd4hep::Transform3D sense_or_central_final_transform(wire_phi_rot * sense_transform);
-    //     dd4hep::Volume* wire_to_be_placed = isSenseWire ? &sense_wire_volume : &central_field_wire_volume;
-    //     auto sense_or_central_placed = sense_layer_volume.placeVolume(*wire_to_be_placed, sense_or_central_final_transform);
-    //   }
-    // }
-
+    if (ilayer == 1) {
+      // print first and final phi for sense and central field wires
+      std::cout << "phi_0 = " << phi0/dd4hep::deg << " deg" << std::endl;
+      std::cout << "phi_step = " << phi_step/dd4hep::deg << " deg" << std::endl;
+      std::cout << "Last sense phi = " << (phi0 + (l.nwires/2)*2*phi_step)/dd4hep::deg << " deg" << std::endl;
+      std::cout << "Last central field phi = " << (phi0 + phi_step + (l.nwires/2)*2*phi_step)/dd4hep::deg << " deg" << std::endl;
+    }
     
   }
 
